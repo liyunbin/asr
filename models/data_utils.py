@@ -19,7 +19,6 @@ import scipy.io.wavfile as wav
 from python_speech_features import mfcc
 from pydub.effects import strip_silence
 from pydub.audio_segment import AudioSegment
-from bokeh.sampledata.gapminder import data_dir
 
 def extract_mfcc(wave_path, args):
     '''抽取mfcc特征
