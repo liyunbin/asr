@@ -32,7 +32,9 @@ def extract_mfcc(wave_path, args):
 #     seg = AudioSegment.from_wav(wave_path)
 #     seg = strip_silence(seg, silence_len=500, silence_thresh=-16, padding=100)
 #     signal_data = np.array(seg.get_array_of_samples()).astype(np.float32)
+    nfft = int(fs*args.window_size/0.8)
     feature = mfcc(signal=signal_data, samplerate=fs, 
+                   nfft = nfft,
                    winlen=args.window_size, winstep=args.window_stride, 
                    numcep=args.feature_num, winfunc=np.hamming)
     return feature
@@ -76,7 +78,11 @@ def expand_timeSteps(orgin_data, max_time_steps):
         [max_time_steps,n_mfcc]
     '''
     orgin_shape = orgin_data.shape
-    data = np.concatenate((orgin_data, np.zeros(shape=(max_time_steps - orgin_shape[0], orgin_shape[1]))), axis=0)
+    if orgin_shape[0] > max_time_steps:
+        print('warning timessteps {} > {}'.format(orgin_shape[0], max_time_steps))
+        return orgin_data[-max_time_steps:, ::]
+    else:
+        data = np.concatenate((orgin_data, np.zeros(shape=(max_time_steps - orgin_shape[0], orgin_shape[1]))), axis=0)
     return data
 
 def vericode_data_process(data_dir, args, save_dir, type='mfcc', single=False):
@@ -107,9 +113,9 @@ def vericode_data_process(data_dir, args, save_dir, type='mfcc', single=False):
             x = expand_timeSteps(spect, args.max_time_steps)
         trn_content = None
         if not single:
-            trn_content = os.path.basename(wave_path).split('.')[0].split('+')[1]
+            trn_content = os.path.basename(wave_path).split('.')[0].split('+')[1].strip()
         else:
-            trn_content = os.path.basename(wave_path).split('.')[0].split('_')[-1]
+            trn_content = os.path.basename(wave_path).split('.')[0].split('_')[-1].strip()
         print('trn_content is:{}'.format(trn_content))
         inputs[idx] = x
         # 0~9 编码为 0~9
@@ -144,7 +150,7 @@ if __name__ == '__main__':
 #                           type=deep_speech2_config.feature_type,
 #                           single=False)
     classify_single_config = asr_config.classify_single_config
-    vericode_data_process(data_dir='../single_data', args=classify_single_config, 
+    vericode_data_process(data_dir='../test', args=classify_single_config, 
                           save_dir='../single_features', 
                           type=classify_single_config.feature_type,
                           single=True)

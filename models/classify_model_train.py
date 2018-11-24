@@ -29,6 +29,8 @@ class Performance(Callback):
         self.inputs = inputs
         self.y_true = y_true
         self.model = model
+        self.kfold= kfold
+        self.algo=algo
         self.log_dir = log_dir
         path = log_dir+'/result'
         if not os.path.exists(path):
@@ -36,8 +38,8 @@ class Performance(Callback):
         
     def on_epoch_end(self, epoch, logs=None):
         print('The current epoch number: {}'.format(epoch))
-        if self.inputs:
-            total_samples = inputs.shape[0]
+        if self.inputs is not None:
+            total_samples = self.inputs.shape[0]
             probs = self.model.predict(self.inputs, batch_size=200)
             if isinstance(probs, list):
                 pred_numbers = np.hstack([np.argsort(n, axis=1)[::, -1].reshape((n.shape[0],1)) for n in probs])
@@ -122,7 +124,8 @@ def train_single(train_corpus_dir, args):
   
         #验证集
         dev_inputs =  inputs[validate_idx]
-        dev_labels = y_labels[validate_idx] 
+        dev_labels = y_labels[validate_idx]
+        dev_performance_labels = y_true[validate_idx].flatten()
                 
         model = classify_model.build_single_vanilla(args)
         print(model.summary())
@@ -131,8 +134,8 @@ def train_single(train_corpus_dir, args):
                                            monitor='val_loss',
                                            save_best_only=True, 
                                            save_weights_only=False)
-        performance = Performance(inputs=dev_inputs, y_true=dev_labels, 
-                                  model=model, kfold==kf_num, 
+        performance = Performance(inputs=dev_inputs, y_true=dev_performance_labels, 
+                                  model=model, kfold=kf_num, 
                                   algo='deepspeech2_for_single', log_dir=args.check_point)
         
         history = model.fit(

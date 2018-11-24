@@ -57,7 +57,7 @@ classify_single_dict = {
     'feature_type':'mfcc',
     'feature_num':13,
     'sample_rate':44100,
-    'max_time_steps':2000,
+    'max_time_steps':100,
     'keep_prob':[.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5],
     'num_hidden':200,
     'num_hidden_fc':10,  # 及就是多少个中文字符，简体字加上罗马字母表加上空格
