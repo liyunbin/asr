@@ -34,7 +34,6 @@ def train(train_corpus_dir, args):
     #加载数据
     (inputs, input_length, y_true, label_length) = \
     data_utils.load_data(train_corpus_dir, args.max_time_steps)
-    y_true = y_true - 1 # 分类从0开始编码
     num_1 = y_true[::, 0]
     num_2 = y_true[::, 1]
     num_3 = y_true[::, 2]
