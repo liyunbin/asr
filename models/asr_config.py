@@ -19,7 +19,7 @@ baidu_deep_speech_2 = {
     'max_time_steps':2000,
     'keep_prob':[.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5],
     'num_hidden':800,
-    'num_hidden_fc':10,  # 及就是多少个中文字符，简体字加上罗马字母表加上空格
+    'num_hidden_fc':11,  # 及就是多少个中文字符，简体字加上罗马字母表加上空格
     'max_char_len':4,
     'rnn_type':'GRU',
     'rnn_stack_num':3,

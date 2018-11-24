@@ -107,7 +107,8 @@ def vericode_data_process(data_dir, args, save_dir, type='mfcc'):
         print('trn_content is:{}'.format(trn_content))
         inputs[idx] = x
         # 0~9 编码为 0~9
-        y_true[idx] = [int(n) for n in trn_content]
+        for index, num_str in  enumerate(trn_content):
+            y_true[idx][index] = int(num_str)
     if save_dir != None:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)

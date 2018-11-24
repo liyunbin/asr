@@ -31,8 +31,9 @@ class Performance(Callback):
 def train(train_corpus_dir, args):
 
     #加载数据
+    base_model, model, optimizer, final_timeSteps = deep_speech_2.build_deepSpeech2(args)
     (inputs, input_length, y_true, label_length) = \
-    data_utils.load_data(train_corpus_dir, args.max_time_steps)
+    data_utils.load_data(train_corpus_dir, final_timeSteps)
     kf = KFold(n_splits=5)
     kf_num = 1
     if not os.path.exists(args.check_point):
