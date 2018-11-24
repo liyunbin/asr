@@ -13,7 +13,7 @@ import classify_model
 import numpy as np
 import tensorflow as tf
 import keras as  K
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 import os
 from keras.utils import to_categorical
 
@@ -113,11 +113,11 @@ def train_single(train_corpus_dir, args):
     data_utils.load_data(train_corpus_dir, args.max_time_steps)
     y_labels = to_categorical(y_true, args.num_hidden_fc)
     
-    kf = KFold(n_splits=5)
+    kf = StratifiedKFold(n_splits=5)
     kf_num = 1
     if not os.path.exists(args.check_point):
         os.makedirs(args.check_point)
-    for train_idx, validate_idx in kf.split(y_true):
+    for train_idx, validate_idx in kf.split(inputs, y_true):
         # 测试集
         train_inputs = inputs[train_idx]
         train_labels = y_labels[train_idx] 
@@ -129,7 +129,7 @@ def train_single(train_corpus_dir, args):
                 
         model = classify_model.build_single_vanilla(args)
         print(model.summary())
-        early_stopping = EarlyStopping(monitor='val_loss', patience=40)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         model_checkpoint = ModelCheckpoint(filepath=args.check_point +'/'+ 'classify_model-fold_{}.hdf5'.format(kf_num),
                                            monitor='val_loss',
                                            save_best_only=True, 
