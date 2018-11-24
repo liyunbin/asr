@@ -17,7 +17,8 @@ import numpy as np
 import glob
 import scipy.io.wavfile as wav
 from python_speech_features import mfcc
-
+from pydub.effects import strip_silence
+from pydub.audio_segment import AudioSegment
 
 def extract_mfcc(wave_path, args):
     '''抽取mfcc特征
@@ -26,8 +27,12 @@ def extract_mfcc(wave_path, args):
         sample_rate: 采样率
         n_mfcc: mfcc 特征个数
     '''
-    fs, audio = wav.read(wave_path)
-    feature = mfcc(signal=audio, samplerate=fs, 
+    
+    fs, signal_data = wav.read(wave_path)
+#     seg = AudioSegment.from_wav(wave_path)
+#     seg = strip_silence(seg, silence_len=500, silence_thresh=-16, padding=100)
+#     signal_data = np.array(seg.get_array_of_samples()).astype(np.float32)
+    feature = mfcc(signal=signal_data, samplerate=fs, 
                    winlen=args.window_size, winstep=args.window_stride, 
                    numcep=args.feature_num, winfunc=np.hamming)
     return feature
