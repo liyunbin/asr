@@ -14,33 +14,27 @@ import librosa
 
 import asr_config
 import numpy as np
+import glob
+import scipy.io.wavfile as wav
+from python_speech_features import mfcc
 
 
-def load_char_index(file_path):
-    '''load 字符字典
-    # Params
-        file_path: char index file. formats: chat tab idnex.
-    # Return
-        chat_index_list: The char index mapping.
-        index_chat_list: The index char mapping.
-    '''
-    data = list(open(file_path, mode='r', encoding='utf-8').readlines())
-    tuple_list = [e.strip('\n').split('\t') for e in data]
-    char_index_list = {k:int(v) for k, v in tuple_list}
-    index_char_list = {int(v):k for k, v in tuple_list}
-    return char_index_list, index_char_list
-
-def extract_mfcc(wave_path, sample_rate=None, n_mfcc=20):
+def extract_mfcc(wave_path, args):
     '''抽取mfcc特征
     # 参数
         wave_path: 路径
         sample_rate: 采样率
         n_mfcc: mfcc 特征个数
     '''
-    wav, sr = librosa.load(wave_path, sr=sample_rate, mono=True);
-    b = librosa.feature.mfcc(wav, sr, n_mfcc=n_mfcc)
-    mfcc = np.transpose(b, [1, 0])
-    return mfcc
+    fs, audio = wav.read(wave_path)
+    feature = mfcc(signal=audio, samplerate=fs, 
+                   winlen=args.window_size, winstep=args.window_stride, 
+                   numcep=args.feature_num, winfunc=np.hamming)
+    return feature
+#     wav, sr = librosa.load(wave_path, sr=sample_rate, mono=True);
+#     b = librosa.feature.mfcc(wav, sr, n_mfcc=n_mfcc)
+#     mfcc = np.transpose(b, [1, 0])
+#     return mfcc
 
 
 def extract_spectrogram(wave_path, args):
@@ -80,56 +74,50 @@ def expand_timeSteps(orgin_data, max_time_steps):
     data = np.concatenate((orgin_data, np.zeros(shape=(max_time_steps - orgin_shape[0], orgin_shape[1]))), axis=0)
     return data
 
-def thchs_data_process(data_dir,
-                       char_index_dict,
-                       args,
-                       save_dir=None,
-                       type='mfcc'):
+def vericode_data_process(data_dir, args, save_dir, type='mfcc'):
+    """verication corpus preprocess.
     
-    file_names = os.listdir(data_dir)
-    samples = int(len(file_names) / 2)  # 样本数量
-    print('目录:{}，一共有:{}个样本'.format(data_dir, samples))
+    """
+    files = glob.glob(data_dir+'/*.wav', recursive=True)
+    print('total sample number are:{}'.format(len(files)))
+    samples = len(files)
+    # 声学特征
+    import pdb
+    pdb.set_trace()
+    inputs = np.zeros(shape=(samples, args.max_time_steps, args.feature_num), dtype='float32')
     
-    inputs = np.zeros(shape=(samples, args.max_time_steps, args.feature_num))
-    # input_length = np.ones(samples) * (args.max_time_steps / 2)
-    y_true = np.zeros(shape=(samples, args.max_char_len))
-    label_length = np.zeros(shape=(samples, 1))
-    counter = 0
-    max_char = 0
-    for name in file_names:
-        if name.endswith('.wav'):
-            wave_path = os.path.join(data_dir, name)
-            x = None
-            if type == 'mfcc':
-                mfcc = extract_mfcc(wave_path, args.sample_rate, args.feature_num)
-                x = expand_timeSteps(mfcc, args.max_time_steps)
-            else:
-                spect = extract_spectrogram(wave_path, args)
-                x = expand_timeSteps(spect, args.max_time_steps)
-            inputs[counter] = x
-            trn_content = list(open(os.path.join(data_dir, name + '.trn'), mode='r').readlines())[0].strip('\n')
-            # print(trn_content)
-            trn_path = os.path.join(data_dir, trn_content)
-            # print(trn_path)
-            corpus = list(open(trn_path, mode='r').readlines())[0]
-            corpus = ' '.join(''.join(corpus.strip('\n').split(' ')))  # 每个汉字以空格相连
-            if len(corpus) > max_char:
-                max_char = len(corpus)
-            # corpus = ''.join(corpus.strip('\n').split(' '))
-            # print(corpus)
-            label_length[counter][0] = len(corpus)
-            for idx, char in enumerate(corpus):
-                y_true[counter][idx] = char_index_dict[char]
-            counter += 1
-            if counter % 100 == 0:
-                print('当前处理样本数：{}'.format(counter))
-    print('字符最大长度：{}'.format(max_char))
+    # 语音对应的验证码ID
+    y_true = np.zeros(shape=(samples, args.max_char_len), dtype='int32')    
+    
+    # 每个语音样本对应文字的token数量，验证码固定为4
+    label_length = np.ones(shape=(samples, 1), dtype='int32') * 4
+    
+    for idx, wave_path in enumerate(files):
+        x = None
+        if type == 'mfcc':
+            mfcc_feature = extract_mfcc(wave_path, args)
+            print(mfcc_feature.shape)
+            x = expand_timeSteps(mfcc_feature, args.max_time_steps)
+        else:
+            spect = extract_spectrogram(wave_path, args)
+            print(spect.shape)
+            x = expand_timeSteps(spect, args.max_time_steps)
+        print(os.path.basename(wave_path))
+        trn_content = os.path.basename(wave_path).split('.')[0].split('+')[1]
+        print('trn_content is:{}'.format(trn_content))
+        inputs[idx] = x
+        # 0~9 编码为 0~9
+        y_true[idx] = [int(n) for n in trn_content]
     if save_dir != None:
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
         np.save(save_dir + '/inputs.npy', inputs)
         np.save(save_dir + '/y_true.npy', y_true)
         np.save(save_dir + '/label_length.npy', label_length)
     return inputs, y_true, label_length
+
     
+
 
 def load_data(data_dir, final_timeSteps):
     
@@ -142,30 +130,32 @@ def load_data(data_dir, final_timeSteps):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='thchs_preprocess',
-                                     description='Script to preprocess thchs data')
-    parser.add_argument("--data_dir", help="Directory of thchs dataset", type=str)
- 
-    parser.add_argument("--save_dir", help="Directory where preprocessed arrays are to be saved",
-                        type=str)
-    
-    parser.add_argument("--type", help="feature types, optional:mfcc,spect. default mfcc",
-                        type=str) 
-    
-    input_args = parser.parse_args()
-    print(input_args)
-    data_dir = input_args.data_dir
-    save_dir = input_args.save_dir
-    feature_type = input_args.type
-    
-    args = asr_config.deep_speech_2
-    char_index_dict, index_char_dict = asr_config.char_index_dict, asr_config.index_char_dict
-     
-    (inputs, y_true, label_length) = \
-    thchs_data_process(data_dir,
-                       char_index_dict,
-                       args,
-                       save_dir,
-                       type=feature_type)
+    deep_speech2_config = asr_config.deep_speech_2
+    vericode_data_process('../data', deep_speech2_config, '../features', type=deep_speech2_config.feature_type)
+#     parser = argparse.ArgumentParser(prog='thchs_preprocess',
+#                                      description='Script to preprocess thchs data')
+#     parser.add_argument("--data_dir", help="Directory of thchs dataset", type=str)
+#  
+#     parser.add_argument("--save_dir", help="Directory where preprocessed arrays are to be saved",
+#                         type=str)
+#     
+#     parser.add_argument("--type", help="feature types, optional:mfcc,spect. default mfcc",
+#                         type=str) 
+#     
+#     input_args = parser.parse_args()
+#     print(input_args)
+#     data_dir = input_args.data_dir
+#     save_dir = input_args.save_dir
+#     feature_type = input_args.type
+#     
+#     args = asr_config.deep_speech_2
+#     char_index_dict, index_char_dict = asr_config.char_index_dict, asr_config.index_char_dict
+#      
+#     (inputs, y_true, label_length) = \
+#     thchs_data_process(data_dir,
+#                        char_index_dict,
+#                        args,
+#                        save_dir,
+#                        type=feature_type)
 
     
