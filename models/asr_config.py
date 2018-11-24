@@ -18,7 +18,7 @@ baidu_deep_speech_2 = {
     'sample_rate':44100,
     'max_time_steps':2000,
     'keep_prob':[.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5],
-    'num_hidden':800,
+    'num_hidden':200,
     'num_hidden_fc':11,  # 及就是多少个中文字符，简体字加上罗马字母表加上空格
     'max_char_len':4,
     'rnn_type':'GRU',
@@ -39,7 +39,7 @@ classify_dict = {
     'sample_rate':44100,
     'max_time_steps':2000,
     'keep_prob':[.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5],
-    'num_hidden':800,
+    'num_hidden':200,
     'num_hidden_fc':10,  # 及就是多少个中文字符，简体字加上罗马字母表加上空格
     'max_char_len':4,
     'rnn_type':'GRU',
@@ -47,6 +47,26 @@ classify_dict = {
     'nb_epoch':1000,
     'batch_size':40,
     'check_point':'./classify_checkpoints'
+    }
+
+classify_single_dict = {
+    'window_size':.025,  # 帧长短 单位：秒
+    'window_stride': .01,  # 帧窗口 单位：秒
+    'window':np.hamming,
+    'feature_normalize':True,
+    'feature_type':'mfcc',
+    'feature_num':13,
+    'sample_rate':44100,
+    'max_time_steps':2000,
+    'keep_prob':[.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5],
+    'num_hidden':200,
+    'num_hidden_fc':10,  # 及就是多少个中文字符，简体字加上罗马字母表加上空格
+    'max_char_len':1,
+    'rnn_type':'GRU',
+    'rnn_stack_num':3,
+    'nb_epoch':1000,
+    'batch_size':40,
+    'check_point':'./classify_single_checkpoints'
     }
 
 tencent_speech_dict = {
@@ -70,3 +90,4 @@ tencent_speech_dict = {
 deep_speech_2 = Struct(**baidu_deep_speech_2)
 tencent_speech = Struct(**tencent_speech_dict)
 classify_config = Struct(**classify_dict)
+classify_single_config = Struct(**classify_single_dict)

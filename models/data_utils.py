@@ -19,6 +19,7 @@ import scipy.io.wavfile as wav
 from python_speech_features import mfcc
 from pydub.effects import strip_silence
 from pydub.audio_segment import AudioSegment
+from bokeh.sampledata.gapminder import data_dir
 
 def extract_mfcc(wave_path, args):
     '''抽取mfcc特征
@@ -79,7 +80,7 @@ def expand_timeSteps(orgin_data, max_time_steps):
     data = np.concatenate((orgin_data, np.zeros(shape=(max_time_steps - orgin_shape[0], orgin_shape[1]))), axis=0)
     return data
 
-def vericode_data_process(data_dir, args, save_dir, type='mfcc'):
+def vericode_data_process(data_dir, args, save_dir, type='mfcc', single=False):
     """verication corpus preprocess.
     
     """
@@ -87,8 +88,6 @@ def vericode_data_process(data_dir, args, save_dir, type='mfcc'):
     print('total sample number are:{}'.format(len(files)))
     samples = len(files)
     # 声学特征
-    import pdb
-    pdb.set_trace()
     inputs = np.zeros(shape=(samples, args.max_time_steps, args.feature_num), dtype='float32')
     
     # 语音对应的验证码ID
@@ -107,8 +106,11 @@ def vericode_data_process(data_dir, args, save_dir, type='mfcc'):
             spect = extract_spectrogram(wave_path, args)
             print(spect.shape)
             x = expand_timeSteps(spect, args.max_time_steps)
-        print(os.path.basename(wave_path))
-        trn_content = os.path.basename(wave_path).split('.')[0].split('+')[1]
+        trn_content = None
+        if not single:
+            trn_content = os.path.basename(wave_path).split('.')[0].split('+')[1]
+        else:
+            trn_content = os.path.basename(wave_path).split('.')[0].split('_')[-1]
         print('trn_content is:{}'.format(trn_content))
         inputs[idx] = x
         # 0~9 编码为 0~9
@@ -136,32 +138,17 @@ def load_data(data_dir, final_timeSteps):
 
 
 if __name__ == '__main__':
-    deep_speech2_config = asr_config.deep_speech_2
-    vericode_data_process('../data', deep_speech2_config, '../features', type=deep_speech2_config.feature_type)
-#     parser = argparse.ArgumentParser(prog='thchs_preprocess',
-#                                      description='Script to preprocess thchs data')
-#     parser.add_argument("--data_dir", help="Directory of thchs dataset", type=str)
-#  
-#     parser.add_argument("--save_dir", help="Directory where preprocessed arrays are to be saved",
-#                         type=str)
-#     
-#     parser.add_argument("--type", help="feature types, optional:mfcc,spect. default mfcc",
-#                         type=str) 
-#     
-#     input_args = parser.parse_args()
-#     print(input_args)
-#     data_dir = input_args.data_dir
-#     save_dir = input_args.save_dir
-#     feature_type = input_args.type
-#     
-#     args = asr_config.deep_speech_2
-#     char_index_dict, index_char_dict = asr_config.char_index_dict, asr_config.index_char_dict
-#      
-#     (inputs, y_true, label_length) = \
-#     thchs_data_process(data_dir,
-#                        char_index_dict,
-#                        args,
-#                        save_dir,
-#                        type=feature_type)
+    # 4位验证码预处理
+#     deep_speech2_config = asr_config.deep_speech_2
+#     vericode_data_process(data_dir='../data', args=deep_speech2_config, 
+#                           save_dir='../features', 
+#                           type=deep_speech2_config.feature_type,
+#                           single=False)
+    classify_single_config = asr_config.classify_single_config
+    vericode_data_process(data_dir='../single_data', args=classify_single_config, 
+                          save_dir='../single_features', 
+                          type=classify_single_config.feature_type,
+                          single=True)
+
 
     
