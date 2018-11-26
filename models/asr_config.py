@@ -24,7 +24,7 @@ baidu_deep_speech_2 = {
     'rnn_type':'GRU',
     'rnn_stack_num':3,
     'nb_epoch':1000,
-    'batch_size':40,
+    'batch_size':100,
     'check_point':'./checkout'
     }
 
