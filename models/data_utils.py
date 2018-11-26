@@ -1,8 +1,6 @@
 '''
 Created on 2017年12月21日
 
-@author: yunbin.li
-
 The file is wave process
 
 '''

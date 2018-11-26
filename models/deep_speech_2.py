@@ -3,7 +3,6 @@ Created on 2017年12月19日
 
 The file is the implement of baidu deep speech 2.
 
-@author: yunbin.li
 '''
 
 from keras.backend import ctc_batch_cost

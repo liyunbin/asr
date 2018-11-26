@@ -1,7 +1,6 @@
 '''
 Created on 2017年12月26日
 
-@author: yunbin.li
 
 The implementation of residual Convolutional CTC Networls.
 The paper is : Residual Convolutional CTC Networks for Automatic Speech Recognition

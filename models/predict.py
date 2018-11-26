@@ -1,7 +1,6 @@
 '''
 Created on 2017年12月22日
 
-@author: yunbin.li
 '''
 from keras.backend import ctc_batch_cost
 from keras.models import load_model 

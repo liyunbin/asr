@@ -3,7 +3,6 @@ Created on 2018年11月24日
 
 验证码分类模型实现
 
-@author: yunbin.li
 '''
 
 from keras.layers import TimeDistributed, Conv2D, Input, Reshape, BatchNormalization, Dropout, \

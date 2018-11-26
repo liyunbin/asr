@@ -1,8 +1,6 @@
 '''
 Created on 2017年12月21日
 
-@author: yunbin.li
-
 '''
 from keras.backend.tensorflow_backend import set_session
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback

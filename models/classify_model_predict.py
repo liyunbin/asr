@@ -1,8 +1,6 @@
 '''
 Created on 2017年11月24日
 
-@author: yunbin.li
-
 验证码分类模型预测代码
 
 '''
