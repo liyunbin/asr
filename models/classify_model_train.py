@@ -88,21 +88,25 @@ def train_4(train_corpus_dir, args):
         dev_num_2 = num_2[validate_idx] 
         dev_num_3 = num_3[validate_idx] 
         dev_num_4 = num_4[validate_idx] 
+        dev_performance_labels = y_true[validate_idx]
         
         model = classify_model.build_vanilla(args)
         print(model.summary())
-        early_stopping = EarlyStopping(monitor='val_loss', patience=20)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=100)
         model_checkpoint = ModelCheckpoint(filepath=args.check_point +'/'+ 'classify_model-fold_{}.hdf5'.format(kf_num),
                                            monitor='val_loss',
                                            save_best_only=True, 
                                            save_weights_only=False)
+        performance = Performance(inputs=dev_inputs, y_true=dev_performance_labels, 
+                        model=model, kfold=kf_num, 
+                        algo='deepspeech2_for_4', log_dir=args.check_point)
         history = model.fit(
                 x=train_inputs,
                 y=[train_num_1, train_num_2, train_num_3, train_num_4],
                 validation_data=(dev_inputs, [dev_num_1, dev_num_2, dev_num_3, dev_num_4]),
                 epochs=args.nb_epoch,
                 batch_size=args.batch_size, shuffle=False,
-                callbacks=[model_checkpoint, early_stopping])
+                callbacks=[model_checkpoint, performance, early_stopping])
         kf_num += 1
         
 def train_single(train_corpus_dir, args):
@@ -154,10 +158,10 @@ if __name__ == '__main__':
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     set_session(tf.Session(config=config))
-    # classify_config = asr_config.classify_config
-    # train_4('../features',classify_config)
-    classify_single_config = asr_config.classify_single_config
-    train_single('../single_features',classify_single_config)
+    classify_config = asr_config.classify_config
+    train_4('../classify_features',classify_config)
+#     classify_single_config = asr_config.classify_single_config
+#     train_single('../single_features',classify_single_config)
 
 
 

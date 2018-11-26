@@ -62,7 +62,7 @@ def build_vanilla(args):
     num_3 = Dense(units=args.num_hidden_fc, activation='softmax', name='num_3')(x)
     num_4 = Dense(units=args.num_hidden_fc, activation='softmax', name='num_4')(x)
         
-    optimizer = sgd(lr=0.0002, momentum=0.99, decay=.0, nesterov=True, clipnorm=400)
+    optimizer = sgd(lr=0.01, momentum=0.99, decay=.0, nesterov=True, clipnorm=400)
     model = Model(inputs=w, outputs=[num_1, num_2, num_3, num_4]);
     model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     return model
